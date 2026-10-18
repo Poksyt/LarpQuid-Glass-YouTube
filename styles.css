@@ -902,6 +902,9 @@ html[data-liquid-glass-active="true"] yt-lockup-view-model:hover :is(yt-thumbnai
   transform: translateY(-4px) scale(1.018);
   box-shadow: 0 18px 34px -14px var(--lg-drop), inset 0 0 0 1px var(--lg-rim-dim) !important;
 }
+html[data-liquid-glass-watch-nav-pending="true"] [data-liquid-glass-watch-nav-freeze="1"] {
+  transition: none !important;
+}
 html[data-liquid-glass-clean="true"] :is(ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer) #details { min-width: 0 !important; padding-top: 10px !important; }
 
 
@@ -1163,6 +1166,12 @@ html[data-liquid-glass-clean="true"] ytd-rich-grid-renderer :is(#contents > ytd-
   from { transform: translateY(-34px) scale(.965); }
   to   { opacity: 1; transform: none; }
 }
+@keyframes lg-chip-drop {
+  0% { opacity: .001; transform: translate3d(0, -30px, 0) scale(.976); }
+  56% { opacity: 1; transform: translate3d(0, 2px, 0) scale(1.006); }
+  76% { opacity: 1; transform: translate3d(0, -.8px, 0) scale(.9985); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
 @keyframes lg-row-in {
   from { transform: translateY(10px) scale(.97); }
   to   { opacity: 1; transform: none; }
@@ -1204,9 +1213,29 @@ html[data-liquid-glass-active="true"] ytd-popup-container :is(ytd-menu-service-i
 html[data-liquid-glass-active="true"] ytd-popup-container :is(ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, ytd-compact-link-renderer, ytd-notification-renderer):nth-child(4) { animation-delay: 120ms; }
 html[data-liquid-glass-active="true"] ytd-popup-container :is(ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, ytd-compact-link-renderer, ytd-notification-renderer):nth-child(n+5) { animation-delay: 150ms; }
 html[data-liquid-glass-boot][data-liquid-glass-active="true"]:not([data-liquid-glass-watch-page="true"]) ytd-app ytd-guide-renderer { animation: lg-guide-enter 780ms var(--lg-spring) 120ms backwards; }
-html[data-liquid-glass-boot] ytd-masthead #container.ytd-masthead,
-html[data-liquid-glass-boot] ytd-feed-filter-chip-bar-renderer #scroll-container {
+html[data-liquid-glass-preboot="true"][data-liquid-glass-active="true"] ytd-masthead #container.ytd-masthead,
+html[data-liquid-glass-preboot="true"][data-liquid-glass-active="true"]:not([data-liquid-glass-watch-page="true"]) ytd-app ytd-guide-renderer {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+html[data-liquid-glass-preboot="true"][data-liquid-glass-active="true"] ytd-feed-filter-chip-bar-renderer #scroll-container {
+  opacity: .001 !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  transform: translate3d(0, -30px, 0) scale(.976) !important;
+  transform-origin: center top !important;
+  will-change: transform, opacity !important;
+}
+html[data-liquid-glass-preboot="true"][data-liquid-glass-active="true"] ytd-feed-filter-chip-bar-renderer [data-liquid-glass-chip-surface="1"] {
+  transition: none !important;
+}
+html[data-liquid-glass-boot] ytd-masthead #container.ytd-masthead {
   animation: lg-drop 900ms var(--lg-spring) backwards !important;
+  transform-origin: center top !important;
+  will-change: transform, opacity !important;
+}
+html[data-liquid-glass-boot] ytd-feed-filter-chip-bar-renderer #scroll-container {
+  animation: lg-chip-drop 900ms cubic-bezier(.16, 1, .3, 1) both !important;
   transform-origin: center top !important;
   will-change: transform, opacity !important;
 }
@@ -1398,12 +1427,9 @@ html[data-liquid-glass-clean="true"] ytd-feed-filter-chip-bar-renderer :is(#scro
   min-width: 0 !important;
 }
 html[data-liquid-glass-clean="true"] ytd-feed-filter-chip-bar-renderer #chips {
-  
-  
-  
-  
-  
   margin-inline: auto !important;
+  transform-origin: center top !important;
+  backface-visibility: hidden !important;
 }
 html[data-liquid-glass-active="true"] :is(
   yt-chip-cloud-chip-renderer[selected] #chip-container,

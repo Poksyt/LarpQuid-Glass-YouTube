@@ -173,14 +173,93 @@
         });
     }
     let bootTimer = 0;
+    let bootReadyFrame = 0;
+    let bootReadyTimer = 0;
+    let bootPending = false;
+    let bootChipSignature = '';
+    let bootChipStableFrames = 0;
     let wasActive = false;
     function playBoot() {
         const root = document.documentElement;
+        root.removeAttribute('data-liquid-glass-preboot');
         root.removeAttribute('data-liquid-glass-boot');
         void root.offsetWidth;
         root.setAttribute('data-liquid-glass-boot', '');
         window.clearTimeout(bootTimer);
         bootTimer = window.setTimeout(() => root.removeAttribute('data-liquid-glass-boot'), 1500);
+    }
+    function cancelBootPreparation() {
+        bootPending = false;
+        if (bootReadyFrame)
+            cancelAnimationFrame(bootReadyFrame);
+        bootReadyFrame = 0;
+        window.clearTimeout(bootReadyTimer);
+        bootReadyTimer = 0;
+        bootChipSignature = '';
+        bootChipStableFrames = 0;
+        document.documentElement.removeAttribute('data-liquid-glass-preboot');
+    }
+    function bootChromeReady(elapsed) {
+        const masthead = document.querySelector('ytd-masthead #container.ytd-masthead');
+        if (!masthead || masthead.getBoundingClientRect().width < 200)
+            return false;
+        if (location.pathname === '/watch' || location.pathname.startsWith('/watch/'))
+            return true;
+        const bar = document.querySelector('ytd-feed-filter-chip-bar-renderer');
+        const scroll = bar?.querySelector('#scroll-container');
+        const chips = bar?.querySelector('#chips');
+        if (!bar || !scroll || !chips || scroll.clientWidth < 80)
+            return false;
+        const visibleChips = Array.from(chips.querySelectorAll(':scope > yt-chip-cloud-chip-renderer, :scope > chip-view-model, :scope > [role="presentation"]'))
+            .filter((chip) => getComputedStyle(chip).display !== 'none' && chip.offsetWidth > 0);
+        tidyChipBar(bar);
+        fitPrimaryChipBars(bar);
+        const signature = `${scroll.clientWidth}|${visibleChips.map((chip) => `${nodeText(chip)}:${chip.offsetWidth}`).join('|')}`;
+        if (signature === bootChipSignature)
+            bootChipStableFrames += 1;
+        else {
+            bootChipSignature = signature;
+            bootChipStableFrames = 0;
+        }
+        return elapsed >= 120 && visibleChips.length >= 3 && bootChipStableFrames >= 2;
+    }
+    function requestBoot() {
+        if (bootPending)
+            return;
+        bootPending = true;
+        const root = document.documentElement;
+        root.setAttribute('data-liquid-glass-preboot', 'true');
+        const started = performance.now();
+        const attempt = () => {
+            bootReadyFrame = 0;
+            if (!bootPending || !settings.enabled) {
+                cancelBootPreparation();
+                return;
+            }
+            const elapsed = performance.now() - started;
+            if (bootChromeReady(elapsed) || elapsed >= 700) {
+                tidyChipBar();
+                fitPrimaryChipBars();
+                bootPending = false;
+                window.clearTimeout(bootReadyTimer);
+                bootReadyTimer = 0;
+                playBoot();
+                return;
+            }
+            bootReadyFrame = requestAnimationFrame(attempt);
+        };
+        bootReadyFrame = requestAnimationFrame(attempt);
+        bootReadyTimer = window.setTimeout(() => {
+            if (!bootPending)
+                return;
+            tidyChipBar();
+            fitPrimaryChipBars();
+            bootPending = false;
+            if (bootReadyFrame)
+                cancelAnimationFrame(bootReadyFrame);
+            bootReadyFrame = 0;
+            playBoot();
+        }, 760);
     }
     let previousWatchRoute = null;
     let guideEnterTimer = 0;
@@ -192,7 +271,61 @@
     let replayingWatchNavigation = false;
     let skipNextWatchRouteExit = false;
     let skipNextWatchRouteExitTimer = 0;
+    let frozenWatchNavigationVisual = null;
+    let frozenWatchNavigationTimer = 0;
     const GUIDE_EXIT_CLEANUP_MS = 560;
+    const WATCH_NAV_FREEZE_ATTR = 'data-liquid-glass-watch-nav-freeze';
+    function clearWatchNavigationVisual() {
+        window.clearTimeout(frozenWatchNavigationTimer);
+        frozenWatchNavigationTimer = 0;
+        if (frozenWatchNavigationVisual) {
+            frozenWatchNavigationVisual.forEach(({ node, state }) => {
+                if (!(node instanceof HTMLElement))
+                    return;
+                node.removeAttribute(WATCH_NAV_FREEZE_ATTR);
+                ['transform', 'transition', 'box-shadow'].forEach((property) => {
+                    const saved = state[property];
+                    if (saved?.value)
+                        node.style.setProperty(property, saved.value, saved.priority || '');
+                    else
+                        node.style.removeProperty(property);
+                });
+            });
+        }
+        frozenWatchNavigationVisual = null;
+        document.documentElement.removeAttribute('data-liquid-glass-watch-nav-pending');
+    }
+    function freezeWatchNavigationVisual(link, path = []) {
+        clearWatchNavigationVisual();
+        const cardSelector = 'ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, yt-lockup-view-model';
+        const visualSelector = 'ytd-thumbnail, yt-thumbnail-view-model, .yt-lockup-view-model-wiz__content-image';
+        const card = path.find((node) => node?.matches?.(cardSelector)) || link?.closest?.(cardSelector);
+        if (!card)
+            return;
+        const visuals = Array.from(new Set([
+            ...path.filter((node) => node?.matches?.(visualSelector)),
+            ...card.querySelectorAll(visualSelector)
+        ])).filter((node) => node instanceof HTMLElement);
+        if (!visuals.length)
+            return;
+        frozenWatchNavigationVisual = visuals.map((node) => {
+            const computed = getComputedStyle(node);
+            const state = {};
+            ['transform', 'transition', 'box-shadow'].forEach((property) => {
+                state[property] = {
+                    value: node.style.getPropertyValue(property),
+                    priority: node.style.getPropertyPriority(property)
+                };
+            });
+            node.setAttribute(WATCH_NAV_FREEZE_ATTR, '1');
+            node.style.setProperty('transition', 'none', 'important');
+            node.style.setProperty('transform', computed.transform === 'none' ? 'none' : computed.transform, 'important');
+            node.style.setProperty('box-shadow', computed.boxShadow === 'none' ? 'none' : computed.boxShadow, 'important');
+            return { node, state };
+        });
+        document.documentElement.setAttribute('data-liquid-glass-watch-nav-pending', 'true');
+        frozenWatchNavigationTimer = window.setTimeout(clearWatchNavigationVisual, 2400);
+    }
     function clearGuideExitGhost() {
         window.clearTimeout(guideExitGhostTimer);
         if (guideExitGhost?.isConnected)
@@ -354,6 +487,7 @@
             return;
         event.preventDefault();
         event.stopImmediatePropagation();
+        freezeWatchNavigationVisual(link, path);
         delayWatchNavigation(link, url);
     }, true);
     function applyRootState() {
@@ -373,7 +507,9 @@
         root.setAttribute('data-liquid-glass-adaptive-chip-text', String(active && settings.adaptiveChipText));
         root.setAttribute('data-liquid-glass-hide-ai-overview', String(active && settings.hideAiOverview));
         if (active && !wasActive)
-            playBoot();
+            requestBoot();
+        else if (!active)
+            cancelBootPreparation();
         wasActive = active;
     }
     let fullscreenWasActive = false;
@@ -1148,8 +1284,20 @@
     const CHIP_AT_END_ATTR = 'data-liquid-glass-chip-at-end';
     const chipScrollBound = new WeakSet();
     const chipResizeBound = new WeakSet();
+    const chipObservedWidths = new WeakMap();
     const chipResizeObserver = typeof ResizeObserver === 'function'
-        ? new ResizeObserver(() => scheduleChipFit())
+        ? new ResizeObserver((entries) => {
+            let changed = false;
+            for (const entry of entries) {
+                const width = Math.round(entry.contentRect.width * 2) / 2;
+                const previous = chipObservedWidths.get(entry.target);
+                chipObservedWidths.set(entry.target, width);
+                if (previous === undefined || Math.abs(width - previous) >= 1)
+                    changed = true;
+            }
+            if (changed)
+                scheduleChipFit();
+        })
         : null;
     function syncChipScrollEdges(bar, scroll) {
         if (!bar || !scroll)
@@ -1175,19 +1323,17 @@
         const items = Array.from(chips.querySelectorAll(':scope > yt-chip-cloud-chip-renderer, :scope > chip-view-model, :scope > [role="presentation"]'));
         const visible = items.filter((item) => {
             const style = getComputedStyle(item);
-            const rect = item.getBoundingClientRect();
-            return style.display !== 'none' && rect.width > 0;
+            return style.display !== 'none' && item.offsetWidth > 0;
         });
         if (!visible.length)
             return chips.scrollWidth;
         const chipStyle = getComputedStyle(chips);
         const gap = Number.parseFloat(chipStyle.columnGap || chipStyle.gap) || 0;
         const itemWidth = visible.reduce((total, item) => {
-            const rect = item.getBoundingClientRect();
             const style = getComputedStyle(item);
             const ml = Number.parseFloat(style.marginLeft) || 0;
             const mr = Number.parseFloat(style.marginRight) || 0;
-            return total + rect.width + ml + mr;
+            return total + item.offsetWidth + ml + mr;
         }, 0);
         return itemWidth + Math.max(0, visible.length - 1) * gap;
     }
@@ -1201,10 +1347,7 @@
             const chips = bar.querySelector('#chips');
             if (!scroll || !chips || scroll.clientWidth < 80)
                 return;
-            const currentZoomRaw = Number.parseFloat(getComputedStyle(chips).zoom);
-            const currentZoom = Number.isFinite(currentZoomRaw) && currentZoomRaw > 0 ? currentZoomRaw : 1;
-            const measured = Math.max(primaryChipNaturalWidth(chips), 1);
-            const natural = Math.max(measured / currentZoom, 1);
+            const natural = Math.max(primaryChipNaturalWidth(chips), 1);
             const scrollStyle = getComputedStyle(scroll);
             const paddingLeft = Number.parseFloat(scrollStyle.paddingLeft) || 0;
             const paddingRight = Number.parseFloat(scrollStyle.paddingRight) || 0;
@@ -1212,10 +1355,13 @@
             const viewport = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
             const responsiveCap = viewport <= 760 ? .72 : viewport <= 900 ? .78 : viewport <= 1100 ? .84 : viewport <= 1280 ? .89 : viewport <= 1440 ? .93 : viewport <= 1600 ? .97 : 1;
             const fit = Math.min(responsiveCap, Math.max(.22, available / natural));
-            const rounded = Math.round(fit * 1000) / 1000;
-            if (Math.abs(currentZoom - rounded) > .002)
+            const rounded = Math.round(fit * 200) / 200;
+            const currentZoom = Number.parseFloat(getComputedStyle(chips).zoom) || 1;
+            if (Math.abs(currentZoom - rounded) >= .004)
                 chips.style.setProperty('zoom', String(rounded), 'important');
-            bar.style.setProperty('--lg-chip-fit', String(rounded));
+            const currentFit = Number.parseFloat(bar.style.getPropertyValue('--lg-chip-fit')) || 0;
+            if (Math.abs(currentFit - rounded) >= .004)
+                bar.style.setProperty('--lg-chip-fit', String(rounded));
             bar.setAttribute(CHIP_FIT_ATTR, rounded < .995 ? 'scaled' : 'native');
             if (!bar.hasAttribute(CHIP_BAR_READY_ATTR)) {
                 requestAnimationFrame(() => bar.setAttribute(CHIP_BAR_READY_ATTR, '1'));
@@ -1224,9 +1370,10 @@
             bar.setAttribute(CHIP_AT_START_ATTR, '1');
             bar.setAttribute(CHIP_AT_END_ATTR, '1');
             bindChipScroller(bar, scroll);
-            if (chipResizeObserver && !chipResizeBound.has(bar)) {
-                chipResizeBound.add(bar);
-                chipResizeObserver.observe(bar);
+            if (chipResizeObserver && !chipResizeBound.has(scroll)) {
+                chipResizeBound.add(scroll);
+                chipObservedWidths.set(scroll, Math.round(scroll.getBoundingClientRect().width * 2) / 2);
+                chipResizeObserver.observe(scroll);
             }
             syncChipScrollEdges(bar, scroll);
         });
@@ -2216,6 +2363,7 @@
     }, true);
     document.addEventListener('yt-navigate-finish', () => {
         syncRouteState();
+        clearWatchNavigationVisual();
         if (!settings.enabled)
             return;
         scheduleCleanup(true);
