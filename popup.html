@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LarpQuid Glass</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="panel">
+    <header class="topbar">
+      <div>
+        <h1>LarpQuid Glass for YouTube</h1>
+      </div>
+      <label class="switch master" title="Enable LarpQuid Glass">
+        <input type="checkbox" id="enabled" aria-label="Enable LarpQuid Glass">
+        <span></span>
+      </label>
+    </header>
+
+    <section class="card" aria-label="Appearance">
+      <div class="section-title">Appearance</div>
+      <label class="row"><span>Bounce</span><span class="switch"><input type="checkbox" id="bounce"><span></span></span></label>
+      <label class="row"><span>Refraction</span><span class="switch"><input type="checkbox" id="refraction"><span></span></span></label>
+      <label class="row"><span>Dark text on light chips</span><span class="switch"><input type="checkbox" id="adaptiveChipText"><span></span></span></label>
+    </section>
+
+    <section class="card" aria-label="Clean up">
+      <div class="section-title">Hide</div>
+      <label class="row"><span>Shorts</span><span class="switch"><input type="checkbox" id="hideShorts"><span></span></span></label>
+      <label class="row"><span>YouTube Music</span><span class="switch"><input type="checkbox" id="hideMusic"><span></span></span></label>
+      <label class="row"><span>YouTube Kids</span><span class="switch"><input type="checkbox" id="hideKids"><span></span></span></label>
+      <label class="row"><span>Premium promos</span><span class="switch"><input type="checkbox" id="hidePremium"><span></span></span></label>
+      <label class="row"><span>AI overview</span><span class="switch"><input type="checkbox" id="hideAiOverview"><span></span></span></label>
+    </section>
+
+    <section class="card actions" aria-label="Video actions">
+      <div class="section-title">Video actions</div>
+      <label class="action-row">
+        <span class="action-name">Join</span>
+        <span class="action-tail"><span class="action-state" data-state-for="hideJoin">Hidden</span><span class="switch"><input type="checkbox" id="hideJoin"><span></span></span></span>
+      </label>
+      <label class="action-row">
+        <span class="action-name">Share</span>
+        <span class="action-tail"><span class="action-state" data-state-for="hideShare">Hidden</span><span class="switch"><input type="checkbox" id="hideShare"><span></span></span></span>
+      </label>
+      <label class="action-row">
+        <span class="action-name">Save</span>
+        <span class="action-tail"><span class="action-state" data-state-for="hideSave">Hidden</span><span class="switch"><input type="checkbox" id="hideSave"><span></span></span></span>
+      </label>
+      <label class="action-row">
+        <span class="action-name">Download</span>
+        <span class="action-tail"><span class="action-state" data-state-for="hideDownload">Hidden</span><span class="switch"><input type="checkbox" id="hideDownload"><span></span></span></span>
+      </label>
+    </section>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "LarpQuid Glass",
+  "version": "1.10.10",
+  "description": "Moi!",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://*.ytimg.com/*",
+    "https://*.ggpht.com/*",
+    "https://*.googleusercontent.com/*"
+  ],
+  "action": {
+    "default_title": "LarpQuid Glass",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "page-search-patch.js",
+        "page-icon-prewarm.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "js": [
+        "content.js",
+        "adaptive-contrast.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
