@@ -182,8 +182,183 @@
         window.clearTimeout(bootTimer);
         bootTimer = window.setTimeout(() => root.removeAttribute('data-liquid-glass-boot'), 1500);
     }
+    let previousWatchRoute = null;
+    let guideEnterTimer = 0;
+    let guideExitTimer = 0;
+    let guideExitGhostTimer = 0;
+    let guideExitGhost = null;
+    let guideExitSource = null;
+    let pendingWatchNavigation = null;
+    let replayingWatchNavigation = false;
+    let skipNextWatchRouteExit = false;
+    let skipNextWatchRouteExitTimer = 0;
+    const GUIDE_EXIT_CLEANUP_MS = 560;
+    function clearGuideExitGhost() {
+        window.clearTimeout(guideExitGhostTimer);
+        if (guideExitGhost?.isConnected)
+            guideExitGhost.remove();
+        if (guideExitSource?.isConnected)
+            guideExitSource.removeAttribute('data-liquid-glass-guide-source-exiting');
+        guideExitGhost = null;
+        guideExitSource = null;
+    }
+    function findVisibleGuide() {
+        const candidates = Array.from(document.querySelectorAll('ytd-guide-renderer'));
+        return candidates.find((candidate) => {
+            const rect = candidate.getBoundingClientRect?.();
+            const style = getComputedStyle(candidate);
+            return rect && rect.width > 120 && rect.height > 160 && style.display !== 'none' && style.visibility !== 'hidden' && Number.parseFloat(style.opacity || '1') > .05;
+        }) || null;
+    }
+    function makeGuideExitGhost() {
+        const guide = findVisibleGuide();
+        if (!guide)
+            return null;
+        const rect = guide.getBoundingClientRect();
+        clearGuideExitGhost();
+        const ghost = document.createElement('div');
+        ghost.setAttribute('data-liquid-glass-guide-ghost', '1');
+        ghost.setAttribute('aria-hidden', 'true');
+        ghost.setAttribute('inert', '');
+        ghost.style.left = `${rect.left}px`;
+        ghost.style.top = `${rect.top}px`;
+        ghost.style.width = `${rect.width}px`;
+        ghost.style.height = `${rect.height}px`;
+        ghost.innerHTML = guide.innerHTML;
+        document.body.appendChild(ghost);
+        ghost.scrollTop = guide.scrollTop || 0;
+        guide.setAttribute('data-liquid-glass-guide-source-exiting', '1');
+        guideExitGhost = ghost;
+        guideExitSource = guide;
+        guideExitGhostTimer = window.setTimeout(clearGuideExitGhost, GUIDE_EXIT_CLEANUP_MS);
+        return ghost;
+    }
+    function startGuideExit(useGhost = true) {
+        if (!settings.enabled)
+            return null;
+        const root = document.documentElement;
+        window.clearTimeout(guideEnterTimer);
+        root.removeAttribute('data-liquid-glass-guide-enter');
+        let animationTarget = null;
+        if (useGhost) {
+            if (!guideExitGhost?.isConnected)
+                makeGuideExitGhost();
+            animationTarget = guideExitGhost;
+        } else {
+            clearGuideExitGhost();
+            animationTarget = findVisibleGuide();
+        }
+        if (root.getAttribute('data-liquid-glass-guide-exit') !== 'true') {
+            root.removeAttribute('data-liquid-glass-guide-exit');
+            void root.offsetWidth;
+            root.setAttribute('data-liquid-glass-guide-exit', 'true');
+        }
+        window.clearTimeout(guideExitTimer);
+        guideExitTimer = window.setTimeout(() => root.removeAttribute('data-liquid-glass-guide-exit'), GUIDE_EXIT_CLEANUP_MS);
+        return animationTarget;
+    }
+    function startGuideEnter() {
+        if (!settings.enabled)
+            return;
+        const root = document.documentElement;
+        clearGuideExitGhost();
+        window.clearTimeout(guideExitTimer);
+        root.removeAttribute('data-liquid-glass-guide-exit');
+        root.removeAttribute('data-liquid-glass-guide-enter');
+        void root.offsetWidth;
+        root.setAttribute('data-liquid-glass-guide-enter', 'true');
+        window.clearTimeout(guideEnterTimer);
+        guideEnterTimer = window.setTimeout(() => root.removeAttribute('data-liquid-glass-guide-enter'), 900);
+    }
+    function syncRouteState() {
+        const root = document.documentElement;
+        const watchRoute = location.pathname === '/watch' || location.pathname.startsWith('/watch/');
+        const enteringWatch = previousWatchRoute === false && watchRoute;
+        const leavingWatch = previousWatchRoute === true && !watchRoute;
+        root.setAttribute('data-liquid-glass-watch-page', watchRoute ? 'true' : 'false');
+        if (enteringWatch) {
+            if (skipNextWatchRouteExit) {
+                skipNextWatchRouteExit = false;
+                window.clearTimeout(skipNextWatchRouteExitTimer);
+            } else {
+                startGuideExit();
+            }
+        }
+        if (leavingWatch)
+            startGuideEnter();
+        previousWatchRoute = watchRoute;
+    }
+    function releaseWatchNavigation(link, url) {
+        const pending = pendingWatchNavigation;
+        if (!pending)
+            return;
+        pendingWatchNavigation = null;
+        skipNextWatchRouteExit = true;
+        window.clearTimeout(skipNextWatchRouteExitTimer);
+        skipNextWatchRouteExitTimer = window.setTimeout(() => {
+            skipNextWatchRouteExit = false;
+        }, 2200);
+        replayingWatchNavigation = true;
+        try {
+            if (link?.isConnected)
+                link.click();
+            else
+                location.assign(url.href);
+        } finally {
+            replayingWatchNavigation = false;
+        }
+    }
+    function delayWatchNavigation(link, url) {
+        if (pendingWatchNavigation)
+            return;
+        const animationTarget = startGuideExit(false);
+        if (!animationTarget) {
+            pendingWatchNavigation = { link, url };
+            releaseWatchNavigation(link, url);
+            return;
+        }
+        const pending = { link, url, animationTarget, timer: 0 };
+        pendingWatchNavigation = pending;
+        const finish = () => {
+            if (pendingWatchNavigation !== pending)
+                return;
+            animationTarget.removeEventListener('animationend', onAnimationEnd);
+            window.clearTimeout(pending.timer);
+            requestAnimationFrame(() => releaseWatchNavigation(link, url));
+        };
+        const onAnimationEnd = (event) => {
+            if (event.target === animationTarget && event.animationName === 'lg-guide-exit')
+                finish();
+        };
+        animationTarget.addEventListener('animationend', onAnimationEnd);
+        pending.timer = window.setTimeout(finish, GUIDE_EXIT_CLEANUP_MS);
+    }
+    window.addEventListener('click', (event) => {
+        if (replayingWatchNavigation)
+            return;
+        if (!settings.enabled || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+            return;
+        if (location.pathname === '/watch' || location.pathname.startsWith('/watch/'))
+            return;
+        const path = event.composedPath?.() || [];
+        const link = path.find((node) => node?.matches?.('a[href]'));
+        if (!link || link.getAttribute('target') === '_blank' || link.hasAttribute('download'))
+            return;
+        let url;
+        try {
+            url = new URL(link.href || link.getAttribute('href'), location.href);
+        } catch {
+            return;
+        }
+        if (url.origin !== location.origin || (url.pathname !== '/watch' && !url.pathname.startsWith('/watch/')))
+            return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        delayWatchNavigation(link, url);
+    }, true);
     function applyRootState() {
         const root = document.documentElement;
+        syncRouteState();
         const active = settings.enabled;
         if (settings.enabled)
             root.setAttribute('data-liquid-glass-clean', 'true');
@@ -544,6 +719,7 @@
     const SEARCH_DISMISSED_ATTR = 'data-liquid-glass-search-suggestions-dismissed';
     const SEARCH_COMMIT_ATTR = 'data-liquid-glass-search-committing';
     const CHIP_SURFACE_ATTR = 'data-liquid-glass-chip-surface';
+    const CHIP_ADAPTIVE_ATTR = 'data-liquid-glass-adaptive-category';
     const CHIP_SELECTED_ATTR = 'data-liquid-glass-chip-selected';
     const SHADOW_STYLE_ID = 'liquid-glass-runtime-patch';
     function installShadowPatch(root) {
@@ -645,6 +821,10 @@
       [${CHIP_SURFACE_ATTR}="1"]::before,[${CHIP_SURFACE_ATTR}="1"]::after,
       [${CHIP_SURFACE_ATTR}="1"] *::before,[${CHIP_SURFACE_ATTR}="1"] *::after {
         background:transparent!important; background-image:none!important; box-shadow:none!important;
+      }
+      :is(yt-touch-feedback-shape,.ytSpecTouchFeedbackShapeHost,.ytSpecTouchFeedbackShapeStroke,.ytSpecTouchFeedbackShapeFill,.yt-spec-touch-feedback-shape,.yt-spec-touch-feedback-shape__fill,.yt-spec-touch-feedback-shape__stroke) {
+        display:none!important; visibility:hidden!important; opacity:0!important;
+        background:transparent!important; background-image:none!important; box-shadow:none!important; pointer-events:none!important;
       }
     `;
         root.appendChild(style);
@@ -851,6 +1031,29 @@
         'yt-chip-view-model'
     ].join(',');
     const CHIP_READY_ATTR = 'data-liquid-glass-chip-ready';
+    const ADAPTIVE_CHIP_CONTEXT_SELECTOR = [
+        'ytd-feed-filter-chip-bar-renderer',
+        'yt-chip-cloud-renderer',
+        'ytd-chips-shelf-with-video-shelf-renderer',
+        'chips-shelf-view-model'
+    ].join(',');
+    function composedClosest(node, selector) {
+        let current = node instanceof Element ? node : null;
+        while (current) {
+            if (current.matches?.(selector))
+                return current;
+            if (current.parentElement) {
+                current = current.parentElement;
+                continue;
+            }
+            const root = current.getRootNode?.();
+            current = root?.host instanceof Element ? root.host : null;
+        }
+        return null;
+    }
+    function isAdaptiveCategoryChip(chip) {
+        return Boolean(composedClosest(chip, ADAPTIVE_CHIP_CONTEXT_SELECTOR));
+    }
     function directChipSurface(chip) {
         if (!chip)
             return null;
@@ -885,10 +1088,23 @@
             if (el !== surface) {
                 el.removeAttribute(CHIP_SURFACE_ATTR);
                 el.removeAttribute(CHIP_SELECTED_ATTR);
+                el.removeAttribute(CHIP_ADAPTIVE_ATTR);
+                el.removeAttribute('data-liquid-glass-chip-tone');
                 el.removeAttribute(CHIP_READY_ATTR);
+                el.style?.removeProperty('--lg-chip-fg');
+                el.style?.removeProperty('--lg-chip-muted');
             }
         });
         surface.setAttribute(CHIP_SURFACE_ATTR, '1');
+        if (isAdaptiveCategoryChip(chip)) {
+            surface.setAttribute(CHIP_ADAPTIVE_ATTR, '1');
+        }
+        else {
+            surface.removeAttribute(CHIP_ADAPTIVE_ATTR);
+            surface.removeAttribute('data-liquid-glass-chip-tone');
+            surface.style.removeProperty('--lg-chip-fg');
+            surface.style.removeProperty('--lg-chip-muted');
+        }
         if (selected)
             surface.setAttribute(CHIP_SELECTED_ATTR, '1');
         else
@@ -1045,6 +1261,23 @@
         else if (!host.hasAttribute(GUIDE_EXPANDED_ATTR))
             host.removeAttribute(GUIDE_EXPANDED_ATTR);
     }
+    let guideAlignFrame = 0;
+    function alignGuideExpanders() {
+        guideAlignFrame = 0;
+        document.querySelectorAll(`[${GUIDE_CONTROL_ATTR}="1"]`).forEach((control) => {
+            control.style?.removeProperty('--lg-guide-expander-align-shift');
+            control.style?.removeProperty('--lg-guide-expander-gap');
+            control.querySelectorAll?.('#icon, yt-icon, yt-icon-shape, .guide-icon, svg').forEach((icon) => {
+                icon.style?.removeProperty('transform');
+                icon.style?.removeProperty('transform-origin');
+            });
+        });
+    }
+    function scheduleGuideAlignment() {
+        if (guideAlignFrame)
+            cancelAnimationFrame(guideAlignFrame);
+        guideAlignFrame = requestAnimationFrame(alignGuideExpanders);
+    }
     function protectGuideExpanders() {
         document.querySelectorAll('ytd-guide-collapsible-entry-renderer, ytd-guide-entry-renderer[can-show-more]').forEach((host) => {
             const rows = Array.from(host.querySelectorAll?.('#expander-item, #collapser-item') || []);
@@ -1055,14 +1288,18 @@
             if (!rows.length)
                 rows.push(host);
             rows.forEach((row) => {
-                const control = row.matches?.('a#endpoint, #endpoint, button, [role="button"]')
-                    ? row
-                    : row.querySelector?.('a#endpoint, #endpoint, button, [role="button"]') || row;
+                const control = row.querySelector?.('a#endpoint')
+                    || row.querySelector?.('#endpoint')
+                    || row.querySelector?.('button')
+                    || row.querySelector?.('[role="button"]')
+                    || (row.matches?.('a#endpoint, #endpoint, button, [role="button"]') ? row : null)
+                    || row;
                 control.setAttribute?.(GUIDE_CONTROL_ATTR, '1');
                 control.style?.setProperty('pointer-events', 'auto', 'important');
             });
             syncGuideExpander(host);
         });
+        scheduleGuideAlignment();
     }
     const RESULT_INFO_TERMS = ['about these results', 'tietoa tuloksista', 'om dessa resultat', 'über diese ergebnisse', 'acerca de estos resultados', 'à propos de ces résultats'];
     const FILTER_TERMS = ['filters', 'filter', 'suodattimet', 'suodata', 'filter', 'filteren', 'filtre', 'filtres'];
@@ -1200,26 +1437,55 @@
         });
     }
     const VIDEO_VOTE_GROUP_ATTR = 'data-liquid-glass-video-vote-group';
+    const VIDEO_VOTE_SURFACE_ATTR = 'data-liquid-glass-video-vote-surface';
     const VIDEO_VOTE_CONTROL_ATTR = 'data-liquid-glass-video-vote-control';
     const VIDEO_VOTE_KIND_ATTR = 'data-liquid-glass-video-vote-kind';
-    function commonAncestorWithin(a, b, stop) {
-        const ancestors = new Set();
-        let node = a;
-        while (node && node !== stop) {
-            ancestors.add(node);
-            node = node.parentElement;
+    function firstDeep(root, selector) {
+        if (!root)
+            return null;
+        if (root.matches?.(selector))
+            return root;
+        return root.querySelector?.(selector) || deepQueryAll(root, selector)[0] || null;
+    }
+    function currentVoteGroups(root) {
+        const selector = [
+            '.ytSegmentedLikeDislikeButtonViewModelHost',
+            'segmented-like-dislike-button-view-model',
+            'ytd-segmented-like-dislike-button-renderer',
+            '#segmented-like-dislike-button'
+        ].join(',');
+        return [...new Set([...(root.querySelectorAll?.(selector) || []), ...deepQueryAll(root, selector)])];
+    }
+    function markVoteGroup(group) {
+        if (!(group instanceof Element) || !group.isConnected)
+            return false;
+        group.setAttribute(VIDEO_VOTE_GROUP_ATTR, '1');
+        const surface = firstDeep(group, '.ytSegmentedLikeDislikeButtonViewModelSegmentedButtonsWrapper, #segmented-buttons-wrapper') || group;
+        surface.setAttribute(VIDEO_VOTE_SURFACE_ATTR, '1');
+        const likeHost = firstDeep(group, '.ytLikeButtonViewModelHost, like-button-view-model, #segmented-like-button, #like-button');
+        const dislikeHost = firstDeep(group, '.ytDislikeButtonViewModelHost, dislike-button-view-model, #segmented-dislike-button, #dislike-button');
+        const likeButton = firstDeep(likeHost, 'button[aria-pressed], button, [role="button"]');
+        const dislikeButton = firstDeep(dislikeHost, 'button[aria-pressed], button, [role="button"]');
+        if (likeButton) {
+            likeButton.setAttribute(VIDEO_VOTE_CONTROL_ATTR, '1');
+            likeButton.setAttribute(VIDEO_VOTE_KIND_ATTR, 'like');
         }
-        node = b;
-        while (node && node !== stop) {
-            if (ancestors.has(node))
-                return node;
-            node = node.parentElement;
+        if (dislikeButton) {
+            dislikeButton.setAttribute(VIDEO_VOTE_CONTROL_ATTR, '1');
+            dislikeButton.setAttribute(VIDEO_VOTE_KIND_ATTR, 'dislike');
         }
-        return null;
+        return Boolean(likeButton || dislikeButton);
     }
     function styleVideoVoteControls() {
         const roots = document.querySelectorAll('ytd-watch-metadata #actions, ytd-watch-metadata #top-level-buttons-computed, ytd-watch-metadata ytd-menu-renderer');
         roots.forEach((root) => {
+            let marked = false;
+            currentVoteGroups(root).forEach((group) => {
+                if (markVoteGroup(group))
+                    marked = true;
+            });
+            if (marked)
+                return;
             const controls = deepQueryAll(root, 'button, [role="button"]').filter((control) => {
                 const rect = control.getBoundingClientRect?.();
                 return rect && rect.width > 18 && rect.height > 18;
@@ -1228,21 +1494,24 @@
                 const label = nodeText(control);
                 return LIKE_TERMS.some((term) => label.includes(term)) && !DISLIKE_TERMS.some((term) => label.includes(term));
             }) || null;
-            if (!like)
-                return;
             const dislike = controls.find((control) => DISLIKE_TERMS.some((term) => nodeText(control).includes(term))) || null;
+            if (!like || !dislike)
+                return;
+            const ancestors = [];
+            let node = like.parentElement;
+            while (node && node !== root) {
+                ancestors.push(node);
+                node = node.parentElement;
+            }
+            const group = ancestors.find((ancestor) => ancestor.contains(dislike)) || null;
+            if (!group)
+                return;
+            group.setAttribute(VIDEO_VOTE_GROUP_ATTR, '1');
+            group.setAttribute(VIDEO_VOTE_SURFACE_ATTR, '1');
             like.setAttribute(VIDEO_VOTE_CONTROL_ATTR, '1');
             like.setAttribute(VIDEO_VOTE_KIND_ATTR, 'like');
-            if (dislike) {
-                dislike.setAttribute(VIDEO_VOTE_CONTROL_ATTR, '1');
-                dislike.setAttribute(VIDEO_VOTE_KIND_ATTR, 'dislike');
-                const group = commonAncestorWithin(like, dislike, root);
-                if (group && group !== like && group !== dislike) {
-                    const groupControls = deepQueryAll(group, 'button, [role="button"]');
-                    if (groupControls.length <= 4)
-                        group.setAttribute(VIDEO_VOTE_GROUP_ATTR, '1');
-                }
-            }
+            dislike.setAttribute(VIDEO_VOTE_CONTROL_ATTR, '1');
+            dislike.setAttribute(VIDEO_VOTE_KIND_ATTR, 'dislike');
         });
     }
     const INLINE_ROW_ATTR = 'data-liquid-glass-inline-action-row';
@@ -1338,6 +1607,24 @@
             });
         });
     }
+    function stabilizeFullGuide() {
+        if (!settings.enabled || document.fullscreenElement || document.webkitFullscreenElement || document.documentElement.getAttribute('data-liquid-glass-player-fullscreen') === 'true')
+            return;
+        const app = document.querySelector('ytd-app');
+        if (!app)
+            return;
+        const drawer = app.querySelector('tp-yt-app-drawer#guide, #guide.ytd-app');
+        const content = drawer?.querySelector?.('#contentContainer');
+        const guide = app.querySelector('ytd-guide-renderer');
+        [drawer, content, guide].forEach((node) => {
+            if (!(node instanceof HTMLElement))
+                return;
+            node.removeAttribute('hidden');
+            node.removeAttribute('inert');
+            if (node.getAttribute('aria-hidden') === 'true')
+                node.setAttribute('aria-hidden', 'false');
+        });
+    }
     function runCleanup() {
         cleanupTimer = 0;
         if (refreshHidden) {
@@ -1349,6 +1636,7 @@
             restoreHidden();
             return;
         }
+        stabilizeFullGuide();
         hideNavigationEntries();
         hideShortsShelves();
         hideVideoActions();
@@ -1457,8 +1745,7 @@
         'ytd-popup-container yt-contextual-sheet-layout',
         'ytd-searchbox .sbdd_a',
         'yt-searchbox [class*="SuggestionsContainer"]',
-        'ytd-app[guide-persistent-and-visible] ytd-guide-renderer',
-        'ytd-app ytd-mini-guide-renderer'
+        'ytd-app ytd-guide-renderer'
     ].join(',');
     let pointerEvent = null;
     let pointerFrame = 0;
@@ -1646,15 +1933,65 @@
     let lastPress = { x: 0, y: 0, time: 0 };
     const rememberPress = (x, y) => { lastPress = { x, y, time: performance.now() }; };
     document.addEventListener('pointerdown', (event) => rememberPress(event.clientX, event.clientY), true);
+    let reroutedSpace = false;
+    const deepActiveElement = () => {
+        let active = document.activeElement;
+        while (active?.shadowRoot?.activeElement)
+            active = active.shadowRoot.activeElement;
+        return active;
+    };
+    const isEditableTarget = (node) => node?.matches?.('input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]');
+    const isPlayerTarget = (node) => Boolean(node?.closest?.('#movie_player, .html5-video-player, .ytp-chrome-controls, .ytp-popup, .ytp-menuitem'));
+    const toggleWatchVideo = () => {
+        const video = document.querySelector('#movie_player video.html5-main-video, #movie_player video, ytd-player video');
+        if (!(video instanceof HTMLVideoElement))
+            return;
+        if (video.paused || video.ended)
+            video.play().catch(() => {});
+        else
+            video.pause();
+    };
     document.addEventListener('keydown', (event) => {
-        if (event.code === 'Space' || event.key === ' ')
-            document.documentElement.setAttribute('data-liquid-glass-space-key', 'true');
+        if (event.code !== 'Space' && event.key !== ' ')
+            return;
+        document.documentElement.setAttribute('data-liquid-glass-space-key', 'true');
+        if (!settings.enabled || !location.pathname.startsWith('/watch'))
+            return;
+        if (reroutedSpace) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return;
+        }
+        const path = event.composedPath?.() || [];
+        if (path.some((node) => isEditableTarget(node)) || path.some((node) => isPlayerTarget(node)))
+            return;
+        const active = deepActiveElement();
+        if (!(active instanceof HTMLElement) || active === document.body || active === document.documentElement || isEditableTarget(active) || isPlayerTarget(active))
+            return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        active.blur();
+        reroutedSpace = true;
+        if (!event.repeat)
+            toggleWatchVideo();
     }, true);
     document.addEventListener('keyup', (event) => {
-        if (event.code === 'Space' || event.key === ' ')
-            document.documentElement.removeAttribute('data-liquid-glass-space-key');
+        if (event.code !== 'Space' && event.key !== ' ')
+            return;
+        document.documentElement.removeAttribute('data-liquid-glass-space-key');
+        if (!reroutedSpace)
+            return;
+        reroutedSpace = false;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const active = deepActiveElement();
+        if (active instanceof HTMLElement && active !== document.body && active !== document.documentElement && !isEditableTarget(active) && !isPlayerTarget(active))
+            active.blur();
     }, true);
-    window.addEventListener('blur', () => document.documentElement.removeAttribute('data-liquid-glass-space-key'));
+    window.addEventListener('blur', () => {
+        reroutedSpace = false;
+        document.documentElement.removeAttribute('data-liquid-glass-space-key');
+    });
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Enter' || event.isComposing)
             return;
@@ -1852,11 +2189,7 @@
             if (bar instanceof HTMLElement)
                 bar.style.removeProperty('--lg-chip-shift-y');
         });
-        document.querySelectorAll([
-            'ytd-app[guide-persistent-and-visible] ytd-guide-renderer',
-            'ytd-app ytd-mini-guide-renderer',
-            'ytd-app:not([guide-persistent-and-visible]) ytd-guide-renderer'
-        ].join(',')).forEach((guide) => {
+        document.querySelectorAll('ytd-app ytd-guide-renderer').forEach((guide) => {
             if (!(guide instanceof HTMLElement))
                 return;
             guide.style.removeProperty('--lg-guide-shift-y');
@@ -1877,7 +2210,12 @@
         };
         chromeLayoutSettleTimer = setTimeout(settlePass, 40);
     }
+    document.addEventListener('yt-navigate-start', () => {
+        requestAnimationFrame(syncRouteState);
+        setTimeout(syncRouteState, 0);
+    }, true);
     document.addEventListener('yt-navigate-finish', () => {
+        syncRouteState();
         if (!settings.enabled)
             return;
         scheduleCleanup(true);
@@ -1901,7 +2239,8 @@
     document.addEventListener('fullscreenchange', settleFullscreenState, true);
     document.addEventListener('webkitfullscreenchange', settleFullscreenState, true);
     document.addEventListener('yt-player-fullscreen-change', settleFullscreenState, true);
-    window.addEventListener('resize', () => { settleFullscreenState(); scheduleChipFit(); scheduleFloatingChromeLayout(); }, { passive: true });
+    window.addEventListener('resize', () => { settleFullscreenState(); stabilizeFullGuide(); scheduleChipFit(); scheduleGuideAlignment(); scheduleFloatingChromeLayout(); }, { passive: true });
+    syncRouteState();
     syncFullscreenState();
     scheduleFloatingChromeLayout(true);
     const observer = new MutationObserver((mutations) => {

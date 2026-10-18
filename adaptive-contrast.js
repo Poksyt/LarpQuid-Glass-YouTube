@@ -1,6 +1,6 @@
 (() => {
     'use strict';
-    const SURFACE_SELECTOR = '[data-liquid-glass-chip-surface="1"]';
+    const SURFACE_SELECTOR = '[data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"]';
     const CHIP_HOSTS = 'yt-chip-cloud-chip-renderer, chip-view-model, yt-chip-view-model, chip-shape';
     const CHROME_SELECTOR = [
         'ytd-feed-filter-chip-bar-renderer',

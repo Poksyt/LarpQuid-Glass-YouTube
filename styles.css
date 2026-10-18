@@ -1,6 +1,9 @@
 @property --lg-mx   { syntax: "<length-percentage>"; inherits: true; initial-value: 50%; }
 @property --lg-my   { syntax: "<length-percentage>"; inherits: true; initial-value: 0%; }
 @property --lg-spec { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --lg-guide-motion-x { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --lg-guide-motion-sx { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --lg-guide-motion-sy { syntax: "<number>"; inherits: false; initial-value: 1; }
 
 
 :root {
@@ -868,20 +871,14 @@ html[data-liquid-glass-active="true"] .html5-video-player .ytp-tooltip.ytp-text-
 
 html[data-liquid-glass-active="true"] :is(
   ytd-watch-metadata yt-button-shape button.yt-spec-button-shape-next--tonal,
-  ytd-watch-metadata yt-button-shape button.yt-spec-button-shape-next--outline,
-  ytd-watch-metadata :is(like-button-view-model, dislike-button-view-model) button
+  ytd-watch-metadata yt-button-shape button.yt-spec-button-shape-next--outline
 ) {
   background: var(--lg-ctl-fill) !important;
   box-shadow: var(--lg-ctl-shadow) !important;
   transition: transform var(--lg-t-fast) var(--lg-spring), background-color var(--lg-t-fast) var(--lg-ease) !important;
 }
-html[data-liquid-glass-active="true"] ytd-watch-metadata yt-button-shape button:hover { background: var(--lg-ctl-hover) !important; transform: translateY(-1px) scale(1.05); }
-html[data-liquid-glass-active="true"] ytd-watch-metadata yt-button-shape button:active { transform: scale(.93); transition-duration: 120ms !important; }
-html[data-liquid-glass-active="true"] ytd-watch-metadata :is(#description, #description-inner) {
-  border-radius: 22px !important;
-  background: var(--lg-ctl-fill) !important;
-  box-shadow: var(--lg-ctl-shadow) !important;
-}
+html[data-liquid-glass-active="true"] ytd-watch-metadata yt-button-shape button:not([data-liquid-glass-video-vote-control="1"]):hover { background: var(--lg-ctl-hover) !important; transform: translateY(-1px) scale(1.05); }
+html[data-liquid-glass-active="true"] ytd-watch-metadata yt-button-shape button:not([data-liquid-glass-video-vote-control="1"]):active { transform: scale(.93); transition-duration: 120ms !important; }
 html[data-liquid-glass-clean="true"] #player,
 html[data-liquid-glass-clean="true"] .html5-video-player,
 html[data-liquid-glass-clean="true"] #movie_player { border-radius: 20px !important; overflow: hidden !important; }
@@ -1056,13 +1053,10 @@ html[data-liquid-glass-active="true"] ytd-watch-metadata #description {
   padding: 16px 22px !important;
   border: 0 !important;
   border-radius: 28px !important;
-  
-  box-shadow: var(--lg-ctl-shadow), 0 14px 30px -18px var(--lg-drop) !important;
-  
-}
-html[data-liquid-glass-active="true"] ytd-watch-metadata #description:hover {
-  --lg-spec: 1;
-  
+  background:
+    linear-gradient(150deg, rgb(255 255 255 / .105), rgb(255 255 255 / 0) 48%, rgb(255 255 255 / .045)),
+    rgb(32 32 35 / .90) !important;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .11), 0 12px 26px -20px rgb(0 0 0 / .82) !important;
 }
 html[data-liquid-glass-active="true"] ytd-watch-metadata #description :is(#description-inner, ytd-text-inline-expander, #description-inline-expander, #snippet, #expanded, #info-container, tp-yt-paper-button#expand, tp-yt-paper-button#collapse, #expand, #collapse) {
   background: transparent !important;
@@ -1209,13 +1203,13 @@ html[data-liquid-glass-active="true"] ytd-popup-container :is(ytd-menu-service-i
 html[data-liquid-glass-active="true"] ytd-popup-container :is(ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, ytd-compact-link-renderer, ytd-notification-renderer):nth-child(3) { animation-delay: 90ms; }
 html[data-liquid-glass-active="true"] ytd-popup-container :is(ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, ytd-compact-link-renderer, ytd-notification-renderer):nth-child(4) { animation-delay: 120ms; }
 html[data-liquid-glass-active="true"] ytd-popup-container :is(ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, ytd-compact-link-renderer, ytd-notification-renderer):nth-child(n+5) { animation-delay: 150ms; }
-html[data-liquid-glass-boot] :is(ytd-app[guide-persistent-and-visible] ytd-guide-renderer, ytd-mini-guide-renderer) { animation: lg-dock-in 1000ms var(--lg-spring) 160ms backwards; }
-@keyframes lg-dock-in {
-  from { opacity: 0; transform: translateX(-28px) scale(.96); }
-  to   { opacity: 1; transform: none; }
+html[data-liquid-glass-boot][data-liquid-glass-active="true"]:not([data-liquid-glass-watch-page="true"]) ytd-app ytd-guide-renderer { animation: lg-guide-enter 780ms var(--lg-spring) 120ms backwards; }
+html[data-liquid-glass-boot] ytd-masthead #container.ytd-masthead,
+html[data-liquid-glass-boot] ytd-feed-filter-chip-bar-renderer #scroll-container {
+  animation: lg-drop 900ms var(--lg-spring) backwards !important;
+  transform-origin: center top !important;
+  will-change: transform, opacity !important;
 }
-html[data-liquid-glass-boot] ytd-masthead #container.ytd-masthead { animation: lg-drop 900ms var(--lg-spring) backwards; }
-html[data-liquid-glass-boot] #chips-wrapper { animation: lg-drop 900ms var(--lg-spring) 110ms backwards; }
 html[data-liquid-glass-boot] :is(ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer):nth-child(-n+8) { animation: lg-row-in var(--lg-t) var(--lg-spring-soft) backwards; }
 html[data-liquid-glass-boot] :is(ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer):nth-child(2) { animation-delay: 60ms; }
 html[data-liquid-glass-boot] :is(ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer):nth-child(3) { animation-delay: 120ms; }
@@ -1439,9 +1433,9 @@ html[data-liquid-glass-active="true"] :is(
 
 
 html[data-liquid-glass-clean="true"] ytd-guide-entry-renderer :is(a#endpoint, #endpoint) {
-  min-height: 40px !important;
-  padding-inline: 14px 12px !important;
-  border-radius: 16px !important;
+  min-height: 42px !important;
+  padding-inline: 14px !important;
+  border-radius: 999px !important;
 }
 html[data-liquid-glass-clean="true"] :is(ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, ytd-guide-collapsible-entry-renderer) {
   margin: 1px 0 !important;
@@ -1508,77 +1502,12 @@ html[data-liquid-glass-active="true"] :is(ytd-subscribe-button-renderer, yt-subs
 }
 
 
-html[data-liquid-glass-active="true"] :is(
-  segmented-like-dislike-button-view-model,
-  yt-segmented-like-dislike-button-renderer,
-  #segmented-like-dislike-button
-) {
-  display: inline-flex !important;
-  align-items: stretch !important;
-  overflow: hidden !important;
-  border-radius: 999px !important;
-  background:
-    linear-gradient(145deg, rgb(255 255 255 / .11), rgb(255 255 255 / .01) 60%),
-    var(--lg-ctl-fill) !important;
-  box-shadow: var(--lg-ctl-shadow) !important;
-}
-html[data-liquid-glass-active="true"] :is(
-  segmented-like-dislike-button-view-model,
-  yt-segmented-like-dislike-button-renderer,
-  #segmented-like-dislike-button
-) :is(like-button-view-model, dislike-button-view-model, yt-button-shape) {
-  background: transparent !important;
-  box-shadow: none !important;
-}
-html[data-liquid-glass-active="true"] :is(
-  segmented-like-dislike-button-view-model,
-  yt-segmented-like-dislike-button-renderer,
-  #segmented-like-dislike-button
-) button > * {
-  background: transparent !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-}
-html[data-liquid-glass-active="true"] :is(
-  segmented-like-dislike-button-view-model,
-  yt-segmented-like-dislike-button-renderer,
-  #segmented-like-dislike-button
-) button {
-  min-width: 40px !important;
-  height: 36px !important;
-  margin: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: var(--yt-spec-text-primary, #fff) !important;
-  transition: background-color var(--lg-t-fast) var(--lg-ease), transform var(--lg-t-fast) var(--lg-spring) !important;
-}
-html[data-liquid-glass-active="true"] :is(
-  segmented-like-dislike-button-view-model,
-  yt-segmented-like-dislike-button-renderer,
-  #segmented-like-dislike-button
-) dislike-button-view-model button {
-  box-shadow: inset 1px 0 0 var(--lg-rim-dim) !important;
-}
-html[data-liquid-glass-active="true"] :is(
-  segmented-like-dislike-button-view-model,
-  yt-segmented-like-dislike-button-renderer,
-  #segmented-like-dislike-button
-) button:hover {
-  background: var(--lg-ctl-hover) !important;
-  transform: none !important;
-}
-html[data-liquid-glass-active="true"] :is(
-  segmented-like-dislike-button-view-model,
-  yt-segmented-like-dislike-button-renderer,
-  #segmented-like-dislike-button
-) button:active { transform: scale(.96) !important; }
-html[data-liquid-glass-active="true"] :is(
-  segmented-like-dislike-button-view-model,
-  yt-segmented-like-dislike-button-renderer,
-  #segmented-like-dislike-button
-) button[aria-pressed="true"] { background: var(--lg-ctl-hover) !important; }
+
+
+
+
+
+
 
 
 html[data-liquid-glass-clean="true"][data-liquid-glass-player-fullscreen="true"] :is(#player, #movie_player, .html5-video-player) {
@@ -2088,15 +2017,6 @@ html[data-liquid-glass-active="true"] [data-liquid-glass-runtime-control="1"] {
 }
 
 
-html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander="1"] {
-  pointer-events: auto !important;
-  position: relative !important;
-  z-index: 2 !important;
-}
-html[data-liquid-glass-clean="true"] ytd-guide-collapsible-entry-renderer[data-liquid-glass-guide-expander="1"] {
-  visibility: visible !important;
-  opacity: 1 !important;
-}
 
 
 html[data-liquid-glass-player-fullscreen="true"] {
@@ -2214,21 +2134,6 @@ html[data-liquid-glass-player-fullscreen="true"] :is(
 }
 
 
-html[data-liquid-glass-active="true"] [data-liquid-glass-guide-expander="1"] :is(button, [role="button"], #endpoint),
-html[data-liquid-glass-active="true"] [data-liquid-glass-guide-expander="1"]:is(button, [role="button"], #endpoint) {
-  min-height: 38px !important;
-  padding-inline: 12px !important;
-  border: 0 !important;
-  border-radius: 14px !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: var(--yt-spec-text-primary, #f7f7f8) !important;
-}
-html[data-liquid-glass-active="true"] [data-liquid-glass-guide-expander="1"] :is(button, [role="button"], #endpoint):hover,
-html[data-liquid-glass-active="true"] [data-liquid-glass-guide-expander="1"]:is(button, [role="button"], #endpoint):hover {
-  background: color-mix(in srgb, var(--lg-ctl-fill) 82%, transparent) !important;
-  box-shadow: inset 0 0 0 1px var(--lg-rim-dim) !important;
-}
 
 
 
@@ -2287,19 +2192,8 @@ html[data-liquid-glass-clean="true"] ytd-guide-collapsible-entry-renderer :is(#e
 html[data-liquid-glass-clean="true"] ytd-guide-collapsible-entry-renderer :is(#expander-item, #collapser-item) a#endpoint:not([href]) {
   pointer-events: auto !important;
 }
-html[data-liquid-glass-active="true"] ytd-guide-collapsible-entry-renderer :is(#expander-item, #collapser-item) a#endpoint:not([href]) {
-  box-sizing: border-box !important;
-  min-height: 40px !important;
-  padding-inline: 14px 12px !important;
-  border-radius: 16px !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: var(--yt-spec-text-primary, #f7f7f8) !important;
-}
-html[data-liquid-glass-active="true"] ytd-guide-collapsible-entry-renderer :is(#expander-item, #collapser-item) a#endpoint:not([href]):hover {
-  background: color-mix(in srgb, var(--lg-ctl-fill) 82%, transparent) !important;
-  box-shadow: inset 0 0 0 1px var(--lg-rim-dim) !important;
-}
+
+
 
 
 html[data-liquid-glass-player-fullscreen="true"] [data-liquid-glass-fullscreen-host="1"],
@@ -2493,85 +2387,9 @@ html[data-liquid-glass-clean="true"] ytd-guide-renderer :is(
 }
 
 
-html[data-liquid-glass-clean="true"] ytd-guide-collapsible-entry-renderer[data-liquid-glass-guide-expander="1"],
-html[data-liquid-glass-clean="true"] ytd-guide-collapsible-entry-renderer[data-liquid-glass-guide-expander="1"] :is(
-  #expander-item,
-  #collapser-item,
-  ytd-guide-entry-renderer,
-  yt-list-item-view-model
-) {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  overflow: visible !important;
-}
-
-html[data-liquid-glass-active="true"] [data-liquid-glass-guide-expander-control="1"] {
-  
-  
-  
-  gap: 0 !important;
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  transform: none !important;
-  
-  
-}
 
 
 
-
-html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander-control="1"] > :is(
-  #icon,
-  yt-icon,
-  yt-icon-shape,
-  .guide-icon,
-  [class*="icon"]
-):first-child {
-  
-  
-  
-  
-  
-  
-  
-  place-self: center !important;
-  
-}
-html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander-control="1"] > :is(
-  #label,
-  #title,
-  #text,
-  yt-formatted-string,
-  span
-) {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  text-align: left !important;
-}
-
-
-html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander-control="1"] :is(.guide-icon, yt-icon, yt-icon-shape) {
-  margin-left: 0 !important;
-  transform: none !important;
-}
 
 
 
@@ -2633,72 +2451,10 @@ html[data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"] :is(
 }
 
 
-html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander="1"],
-html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander="1"] :is(
-  #expander-item,
-  #collapser-item,
-  ytd-guide-entry-renderer,
-  yt-list-item-view-model,
-  tp-yt-paper-item
-) {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  border-color: transparent !important;
-}
-html[data-liquid-glass-active="true"] [data-liquid-glass-guide-expander-control="1"] {
-  box-sizing: border-box !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  width: 100% !important;
-  min-height: 46px !important;
-  margin: 0 !important;
-  padding: 0 16px 0 20px !important;
-  border: 0 !important;
-  border-radius: 999px !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  color: #fff !important;
-  overflow: visible !important;
-  pointer-events: auto !important;
-  transition:
-    transform var(--lg-t) var(--lg-spring),
-    background-color var(--lg-t-fast) var(--lg-ease),
-    box-shadow var(--lg-t-fast) var(--lg-ease) !important;
-}
-html[data-liquid-glass-active="true"] [data-liquid-glass-guide-expander-control="1"]:hover {
-  background: var(--lg-ctl-fill) !important;
-  box-shadow: var(--lg-ctl-shadow) !important;
-  transform: translateX(5px) scale(1.03) !important;
-}
-html[data-liquid-glass-active="true"] [data-liquid-glass-guide-expander-control="1"]:active {
-  transform: scale(.94) !important;
-  transition-duration: 120ms !important;
-}
-html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander-control="1"] > :is(
-  #icon,
-  yt-icon,
-  yt-icon-shape,
-  .guide-icon,
-  [class*="icon"]
-):first-child {
-  box-sizing: border-box !important;
-  flex: 0 0 24px !important;
-  width: 24px !important;
-  min-width: 24px !important;
-  height: 24px !important;
-  margin: 0 16px 0 0 !important;
-  padding: 0 !important;
-  transform: none !important;
-}
 
 
-html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander="1"][data-liquid-glass-guide-expanded="1"] #expander-item {
-  display: none !important;
-}
+
+
 
 
 html[data-liquid-glass-clean="true"] :is(
@@ -3278,7 +3034,7 @@ html[data-liquid-glass-active="true"] ytd-app[guide-persistent-and-visible] ytd-
   box-sizing: border-box !important;
   
   
-  padding: 10px 8px 12px !important;
+  padding: 8px !important;
   border: 1px solid rgb(255 255 255 / .11) !important;
   border-radius: 28px !important;
   background:
@@ -3314,11 +3070,6 @@ html[data-liquid-glass-clean="true"] ytd-app[guide-persistent-and-visible] ytd-g
   padding-block: 1px 4px !important;
 }
 
-
-html[data-liquid-glass-clean="true"] ytd-app[guide-persistent-and-visible] ytd-guide-renderer ytd-guide-entry-renderer :is(a#endpoint, #endpoint),
-html[data-liquid-glass-active="true"] ytd-app[guide-persistent-and-visible] ytd-guide-renderer [data-liquid-glass-guide-expander-control="1"] {
-  border-radius: 15px !important;
-}
 html[data-liquid-glass-active="true"] ytd-app[guide-persistent-and-visible] ytd-guide-renderer ytd-guide-entry-renderer[active] :is(a#endpoint, #endpoint) {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / .12),
@@ -4123,18 +3874,7 @@ html[data-liquid-glass-active="true"] ytd-app[guide-persistent-and-visible] ytd-
   pointer-events: auto !important;
   z-index: 2160 !important;
 }
-html[data-liquid-glass-active="true"] ytd-app[guide-persistent-and-visible] ytd-guide-renderer :is(
-  #guide-content,
-  #guide-inner-content,
-  ytd-guide-section-renderer,
-  ytd-guide-entry-renderer,
-  ytd-guide-collapsible-entry-renderer,
-  a#endpoint,
-  #endpoint,
-  [data-liquid-glass-guide-expander-control="1"]
-) {
-  pointer-events: auto !important;
-}
+
 
 
 html[data-liquid-glass-clean="true"] ytd-app[guide-persistent-and-visible] ytd-guide-renderer :is(
@@ -4485,20 +4225,20 @@ html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liqu
   --yt-spec-text-primary: var(--lg-chip-fg, rgb(250 250 252)) !important;
   --yt-spec-text-secondary: var(--lg-chip-muted, rgb(245 245 248 / .84)) !important;
 }
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="dark"],
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="dark"] :where(*) {
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="dark"],
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="dark"] :where(*) {
   color: rgb(18 18 20) !important;
   -webkit-text-fill-color: rgb(18 18 20) !important;
 }
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="light"],
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="light"] :where(*) {
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="light"],
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="light"] :where(*) {
   color: rgb(250 250 252) !important;
   -webkit-text-fill-color: rgb(250 250 252) !important;
 }
 
 
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="light"],
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="light"] :where(*) {
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="light"],
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="light"] :where(*) {
   transition-duration: 820ms, 820ms, 150ms, 150ms, 150ms, var(--lg-t-fast), var(--lg-t-fast) !important;
 }
 
@@ -4518,12 +4258,6 @@ html[data-liquid-glass-video-playing="true"][data-liquid-glass-active="true"] yt
     linear-gradient(150deg, rgb(255 255 255 / .115), rgb(255 255 255 / .018) 48%, rgb(255 255 255 / .05)),
     rgb(27 27 30 / .94) !important;
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12), 0 14px 34px -22px rgb(0 0 0 / .86) !important;
-}
-html[data-liquid-glass-video-playing="true"][data-liquid-glass-active="true"] ytd-watch-flexy ytd-watch-metadata #description {
-  background:
-    linear-gradient(150deg, rgb(255 255 255 / .105), rgb(255 255 255 / 0) 48%, rgb(255 255 255 / .045)),
-    rgb(32 32 35 / .90) !important;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .11), 0 12px 26px -20px rgb(0 0 0 / .82) !important;
 }
 
 html[data-liquid-glass-clean="true"]:has(yt-live-chat-app) :is(
@@ -4554,49 +4288,218 @@ html[data-liquid-glass-active="true"][data-liquid-glass-hide-ai-overview="true"]
 }
 
 
-html[data-liquid-glass-active="true"] ytd-watch-metadata #description:hover {
-  --lg-spec: 0 !important;
-  box-shadow: var(--lg-ctl-shadow) !important;
-}
 
 
 
 
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="dark"],
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="dark"] :where(*) {
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="dark"],
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="dark"] :where(*) {
   transition-duration: 1600ms, 1600ms, 150ms, 150ms, 150ms, var(--lg-t-fast), var(--lg-t-fast) !important;
   transition-timing-function: cubic-bezier(.22, .61, .36, 1), cubic-bezier(.22, .61, .36, 1), var(--lg-ease), var(--lg-ease), var(--lg-ease), var(--lg-spring), var(--lg-spring) !important;
 }
 
 
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="dark"],
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="dark"] :where(*),
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="light"],
-html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-chip-tone="light"] :where(*) {
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="dark"],
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="dark"] :where(*),
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="light"],
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"][data-liquid-glass-adaptive-category="1"][data-liquid-glass-chip-tone="light"] :where(*) {
   transition-duration: 1600ms, 1600ms, 150ms, 150ms, 150ms, var(--lg-t-fast), var(--lg-t-fast) !important;
   transition-timing-function: cubic-bezier(.22, .61, .36, 1), cubic-bezier(.22, .61, .36, 1), var(--lg-ease), var(--lg-ease), var(--lg-ease), var(--lg-spring), var(--lg-spring) !important;
 }
 
-html[data-liquid-glass-active="true"] ytd-app[guide-persistent-and-visible] ytd-guide-renderer {
-  --lg-guide-width: calc(var(--lg-guide-lane) - 12px) !important;
+html[data-liquid-glass-active="true"]:not([data-liquid-glass-player-fullscreen="true"]):not([data-liquid-glass-watch-page="true"]) ytd-app {
+  --lg-guide-lane: var(--app-drawer-width, 240px);
+  --lg-guide-outer-gap: 10px;
+  --lg-guide-width: calc(var(--lg-guide-lane) - (2 * var(--lg-guide-outer-gap)));
+  --ytd-mini-guide-width: var(--lg-guide-lane) !important;
+  --ytd-persistent-guide-width: var(--lg-guide-lane) !important;
 }
 
-html[data-liquid-glass-clean="true"] ytd-app[guide-persistent-and-visible] ytd-guide-renderer :is(ytd-guide-entry-renderer, ytd-guide-collapsible-entry-renderer) {
+html[data-liquid-glass-active="true"] ytd-app ytd-mini-guide-renderer {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html[data-liquid-glass-active="true"]:not([data-liquid-glass-player-fullscreen="true"]):not([data-liquid-glass-watch-page="true"]) ytd-app :is(tp-yt-app-drawer#guide, #guide.ytd-app) {
+  position: fixed !important;
+  inset: 0 auto 0 0 !important;
+  display: block !important;
+  visibility: visible !important;
+  width: var(--lg-guide-lane) !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  translate: none !important;
+  transform: none !important;
+  overflow: visible !important;
+  pointer-events: none !important;
+}
+
+html[data-liquid-glass-active="true"]:not([data-liquid-glass-player-fullscreen="true"]):not([data-liquid-glass-watch-page="true"]) ytd-app :is(tp-yt-app-drawer#guide, #guide.ytd-app) :is(#scrim, .scrim) {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+html[data-liquid-glass-active="true"]:not([data-liquid-glass-player-fullscreen="true"]):not([data-liquid-glass-watch-page="true"]) ytd-app :is(tp-yt-app-drawer#guide, #guide.ytd-app) #contentContainer {
+  position: static !important;
+  display: block !important;
+  visibility: visible !important;
+  width: var(--lg-guide-lane) !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  translate: none !important;
+  transform: none !important;
+  overflow: visible !important;
+  pointer-events: none !important;
+}
+
+html[data-liquid-glass-active="true"]:not([data-liquid-glass-player-fullscreen="true"]):not([data-liquid-glass-watch-page="true"]) ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer {
+  position: fixed !important;
+  --lg-guide-width: calc(var(--lg-guide-lane, var(--app-drawer-width, 240px)) - (2 * var(--lg-guide-outer-gap, 10px))) !important;
+  display: block !important;
+  visibility: visible !important;
+  box-sizing: border-box !important;
+  top: var(--lg-guide-outer-gap) !important;
+  bottom: var(--lg-guide-outer-gap) !important;
+  left: var(--lg-guide-outer-gap) !important;
+  right: auto !important;
+  width: var(--lg-guide-width) !important;
   height: auto !important;
   min-height: 0 !important;
-  overflow: visible !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 8px !important;
+  border-radius: 28px !important;
+  --lg-guide-motion-x: 0px;
+  --lg-guide-motion-sx: 1;
+  --lg-guide-motion-sy: 1;
+  translate: none !important;
+  transform: translate3d(var(--lg-guide-motion-x), 0, 0) scaleX(var(--lg-guide-motion-sx)) scaleY(var(--lg-guide-motion-sy)) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: none !important;
+  pointer-events: auto !important;
+  z-index: 2160 !important;
 }
 
-html[data-liquid-glass-clean="true"] ytd-app[guide-persistent-and-visible] ytd-guide-renderer :is(a#endpoint, #endpoint) {
+html[data-liquid-glass-active="true"]:not([data-liquid-glass-player-fullscreen="true"]):not([data-liquid-glass-watch-page="true"]) ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+html[data-liquid-glass-clean="true"] ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer :is(
+  #guide-content,
+  #guide-inner-content,
+  #sections,
+  #contents,
+  ytd-guide-section-renderer,
+  #items,
+  ytd-guide-entry-renderer,
+  ytd-guide-collapsible-entry-renderer,
+  #expander-item,
+  #collapser-item
+) {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+}
+
+html[data-liquid-glass-clean="true"] ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer #guide-content {
   height: auto !important;
-  min-height: 42px !important;
-  align-items: center !important;
-  gap: 10px !important;
-  padding-inline: 12px 10px !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overscroll-behavior: auto !important;
+}
+
+html[data-liquid-glass-clean="true"] ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer :is(ytd-guide-entry-renderer, ytd-guide-collapsible-entry-renderer) {
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
   overflow: visible !important;
 }
 
-html[data-liquid-glass-clean="true"] ytd-app[guide-persistent-and-visible] ytd-guide-renderer :is(
+html[data-liquid-glass-clean="true"] ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer :is(a#endpoint, #endpoint, [data-liquid-glass-guide-expander-control="1"]) {
+  box-sizing: border-box !important;
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  color: rgb(248 248 250) !important;
+  -webkit-text-fill-color: currentColor !important;
+  transition:
+    transform var(--lg-t) var(--lg-spring),
+    background-color var(--lg-t-fast) var(--lg-ease),
+    box-shadow var(--lg-t-fast) var(--lg-ease) !important;
+}
+
+html[data-liquid-glass-clean="true"] ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer :is(a#endpoint, #endpoint) > :is(tp-yt-paper-item, yt-list-item-view-model) {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  border-radius: inherit !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-liquid-glass-clean="true"] ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer :is(a#endpoint, #endpoint):not(:has(> tp-yt-paper-item)):not(:has(> yt-list-item-view-model)) {
+  gap: 12px !important;
+  padding-inline: 14px !important;
+}
+
+html[data-liquid-glass-clean="true"] ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer :is(a#endpoint, #endpoint) :is(
+  .guide-icon,
+  yt-icon.guide-icon,
+  yt-icon-shape,
+  yt-img-shadow
+) {
+  box-sizing: border-box !important;
+  flex: 0 0 24px !important;
+  width: 24px !important;
+  min-width: 24px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform-origin: 50% 50% !important;
+  transition: transform var(--lg-t) var(--lg-spring) !important;
+}
+
+html[data-liquid-glass-clean="true"] ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer [data-liquid-glass-guide-expander-control="1"] :is(.guide-icon, yt-icon, yt-icon-shape) svg {
+  width: 24px !important;
+  height: 24px !important;
+  transform: scale(1.35) !important;
+  transform-origin: 50% 50% !important;
+}
+
+html[data-liquid-glass-clean="true"] ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer :is(
   yt-formatted-string.title,
   #label,
   .title,
@@ -4608,57 +4511,401 @@ html[data-liquid-glass-clean="true"] ytd-app[guide-persistent-and-visible] ytd-g
   width: auto !important;
   min-width: 0 !important;
   max-width: none !important;
+  margin: 0 !important;
   overflow: visible !important;
   white-space: normal !important;
   text-overflow: clip !important;
+  text-align: left !important;
   line-height: 1.18 !important;
   overflow-wrap: anywhere !important;
+  color: rgb(248 248 250) !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 
-html[data-liquid-glass-active="true"] :is(
-  [data-liquid-glass-video-vote-group="1"],
-  segmented-like-dislike-button-view-model,
-  yt-segmented-like-dislike-button-renderer,
-  #segmented-like-dislike-button
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander="1"] {
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander="1"] :is(
+  #expander-item,
+  #collapser-item,
+  tp-yt-paper-item,
+  yt-list-item-view-model
 ) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-expander="1"][data-liquid-glass-guide-expanded="1"] #expander-item {
+  display: none !important;
+}
+
+html[data-liquid-glass-active="true"]:not([data-liquid-glass-player-fullscreen="true"]):not([data-liquid-glass-watch-page="true"]) ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer :is(a#endpoint, #endpoint, [data-liquid-glass-guide-expander-control="1"]):hover {
+  background: color-mix(in srgb, var(--lg-ctl-fill) 82%, transparent) !important;
+  box-shadow: inset 0 0 0 1px var(--lg-rim-dim) !important;
+  transform: translateX(2px) scale(1.015) !important;
+}
+
+html[data-liquid-glass-active="true"][data-liquid-glass-bounce="true"]:not([data-liquid-glass-player-fullscreen="true"]):not([data-liquid-glass-watch-page="true"]) ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer :is(a#endpoint, #endpoint, [data-liquid-glass-guide-expander-control="1"]):active {
+  transform: translateX(1px) scale(.972) !important;
+  transition-duration: 120ms !important;
+}
+
+html[data-liquid-glass-active="true"]:not([data-liquid-glass-player-fullscreen="true"]):not([data-liquid-glass-watch-page="true"]) ytd-app:is([guide-persistent-and-visible], :not([guide-persistent-and-visible])) ytd-guide-renderer :is(a#endpoint, #endpoint, [data-liquid-glass-guide-expander-control="1"]):hover :is(.guide-icon, yt-icon.guide-icon, yt-img-shadow) {
+  transform: scale(1.06) !important;
+}
+
+html[data-liquid-glass-guide-enter="true"][data-liquid-glass-active="true"]:not([data-liquid-glass-watch-page="true"]) ytd-app ytd-guide-renderer {
+  animation: lg-guide-enter 820ms linear both !important;
+  transform-origin: 18% 50% !important;
+  will-change: transform, opacity !important;
+}
+
+html[data-liquid-glass-guide-exit="true"][data-liquid-glass-active="true"] ytd-app {
+  --lg-guide-lane: var(--app-drawer-width, 240px);
+  --lg-guide-outer-gap: 10px;
+  --lg-guide-width: calc(var(--lg-guide-lane) - (2 * var(--lg-guide-outer-gap)));
+}
+
+html[data-liquid-glass-guide-exit="true"][data-liquid-glass-active="true"] ytd-app :is(tp-yt-app-drawer#guide, #guide.ytd-app) {
+  position: fixed !important;
+  inset: 0 auto 0 0 !important;
+  display: block !important;
+  visibility: visible !important;
+  width: var(--lg-guide-lane) !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  pointer-events: none !important;
+}
+
+html[data-liquid-glass-guide-exit="true"][data-liquid-glass-active="true"] ytd-app :is(tp-yt-app-drawer#guide, #guide.ytd-app) #contentContainer {
+  position: static !important;
+  display: block !important;
+  visibility: visible !important;
+  width: var(--lg-guide-lane) !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  pointer-events: none !important;
+}
+
+html[data-liquid-glass-guide-exit="true"][data-liquid-glass-active="true"] ytd-app ytd-guide-renderer {
+  position: fixed !important;
+  --lg-guide-motion-x: 0px;
+  --lg-guide-motion-sx: 1;
+  --lg-guide-motion-sy: 1;
+  display: block !important;
+  visibility: visible !important;
+  box-sizing: border-box !important;
+  top: var(--lg-guide-outer-gap) !important;
+  bottom: var(--lg-guide-outer-gap) !important;
+  left: var(--lg-guide-outer-gap) !important;
+  right: auto !important;
+  width: var(--lg-guide-width) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 8px !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(260px circle at var(--lg-mx) var(--lg-my), rgb(255 255 255 / calc(.18 * var(--lg-spec))), transparent 62%),
+    linear-gradient(155deg, rgb(255 255 255 / .16), rgb(255 255 255 / 0) 42%, rgb(255 255 255 / .07)),
+    var(--lg-bar-fill) !important;
+  -webkit-backdrop-filter: var(--lg-refr-lg) blur(16px) saturate(var(--lg-sat)) brightness(var(--lg-bright)) !important;
+  backdrop-filter: var(--lg-refr-lg) blur(16px) saturate(var(--lg-sat)) brightness(var(--lg-bright)) !important;
+  box-shadow: var(--lg-panel-shadow) !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  z-index: 2160 !important;
+  transform: translate3d(var(--lg-guide-motion-x), 0, 0) scaleX(var(--lg-guide-motion-sx)) scaleY(var(--lg-guide-motion-sy)) !important;
+  transform-origin: 18% 50% !important;
+  animation: lg-guide-exit 480ms linear both !important;
+  will-change: transform, opacity !important;
+}
+
+@keyframes lg-guide-enter {
+  0% { opacity: 0; --lg-guide-motion-x: -34px; --lg-guide-motion-sx: .935; --lg-guide-motion-sy: .985; }
+  44% { opacity: 1; --lg-guide-motion-x: 6px; --lg-guide-motion-sx: 1.018; --lg-guide-motion-sy: .994; }
+  64% { --lg-guide-motion-x: -3px; --lg-guide-motion-sx: .992; --lg-guide-motion-sy: 1.006; }
+  79% { --lg-guide-motion-x: 1.5px; --lg-guide-motion-sx: 1.005; --lg-guide-motion-sy: .998; }
+  90% { --lg-guide-motion-x: -.5px; --lg-guide-motion-sx: .999; --lg-guide-motion-sy: 1.001; }
+  100% { opacity: 1; --lg-guide-motion-x: 0px; --lg-guide-motion-sx: 1; --lg-guide-motion-sy: 1; }
+}
+
+@keyframes lg-guide-exit {
+  0% { opacity: 1; --lg-guide-motion-x: 0px; --lg-guide-motion-sx: 1; --lg-guide-motion-sy: 1; }
+  16% { opacity: 1; --lg-guide-motion-x: 5px; --lg-guide-motion-sx: 1.018; --lg-guide-motion-sy: .994; }
+  34% { opacity: 1; --lg-guide-motion-x: -4px; --lg-guide-motion-sx: .992; --lg-guide-motion-sy: 1.006; }
+  58% { opacity: .92; --lg-guide-motion-x: -18px; --lg-guide-motion-sx: .972; --lg-guide-motion-sy: .998; }
+  78% { opacity: .52; --lg-guide-motion-x: -38px; --lg-guide-motion-sx: .942; --lg-guide-motion-sy: .986; }
+  100% { opacity: 0; --lg-guide-motion-x: -62px; --lg-guide-motion-sx: .90; --lg-guide-motion-sy: .968; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-liquid-glass-guide-enter="true"][data-liquid-glass-active="true"] ytd-app ytd-guide-renderer,
+  html[data-liquid-glass-guide-exit="true"][data-liquid-glass-active="true"] ytd-app ytd-guide-renderer {
+    animation-duration: 1ms !important;
+  }
+}
+
+html[data-liquid-glass-clean="true"]:not([data-liquid-glass-player-fullscreen="true"]):not([data-liquid-glass-watch-page="true"]) ytd-app #page-manager {
+  margin-left: var(--lg-guide-lane, var(--app-drawer-width, 240px)) !important;
+}
+
+html[data-liquid-glass-clean="true"] :is(
+  yt-interaction,
+  tp-yt-paper-ripple,
+  paper-ripple,
+  .paper-ripple,
+  .yt-spec-touch-feedback-shape,
+  .yt-spec-touch-feedback-shape__fill,
+  .yt-spec-touch-feedback-shape__stroke,
+  .yt-spec-touch-feedback-shape__highlight,
+  yt-touch-feedback-shape,
+  .ytSpecTouchFeedbackShapeHost,
+  .ytSpecTouchFeedbackShapeStroke,
+  .ytSpecTouchFeedbackShapeFill
+) {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  pointer-events: none !important;
+}
+
+html[data-liquid-glass-clean="true"] :is(
+  yt-interaction,
+  tp-yt-paper-ripple,
+  paper-ripple,
+  .paper-ripple,
+  .yt-spec-touch-feedback-shape,
+  .yt-spec-touch-feedback-shape__fill,
+  .yt-spec-touch-feedback-shape__stroke,
+  .yt-spec-touch-feedback-shape__highlight,
+  yt-touch-feedback-shape,
+  .ytSpecTouchFeedbackShapeHost,
+  .ytSpecTouchFeedbackShapeStroke,
+  .ytSpecTouchFeedbackShapeFill
+)::before,
+html[data-liquid-glass-clean="true"] :is(
+  yt-interaction,
+  tp-yt-paper-ripple,
+  paper-ripple,
+  .paper-ripple,
+  .yt-spec-touch-feedback-shape,
+  .yt-spec-touch-feedback-shape__fill,
+  .yt-spec-touch-feedback-shape__stroke,
+  .yt-spec-touch-feedback-shape__highlight,
+  yt-touch-feedback-shape,
+  .ytSpecTouchFeedbackShapeHost,
+  .ytSpecTouchFeedbackShapeStroke,
+  .ytSpecTouchFeedbackShapeFill
+)::after {
+  content: none !important;
+  display: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+html[data-liquid-glass-clean="true"] :is(
+  button,
+  [role="button"],
+  [role="tab"],
+  a[href],
+  yt-icon-button,
+  tp-yt-paper-button
+) {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+html[data-liquid-glass-clean="true"] :is(
+  button,
+  [role="button"],
+  [role="tab"],
+  a[href],
+  yt-icon-button,
+  tp-yt-paper-button
+):is(:focus, :focus-visible) {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
+html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-group="1"] {
   display: inline-flex !important;
   align-items: stretch !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-surface="1"] {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: stretch !important;
+  min-height: 36px !important;
   overflow: hidden !important;
   border: 1px solid rgb(255 255 255 / .14) !important;
   border-radius: 999px !important;
-  background: linear-gradient(145deg, rgb(255 255 255 / .12), rgb(255 255 255 / .018) 62%), var(--lg-ctl-fill) !important;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / .065), rgb(255 255 255 / .025)),
+    var(--lg-ctl-fill) !important;
   -webkit-backdrop-filter: blur(14px) saturate(1.35) brightness(.97) !important;
   backdrop-filter: blur(14px) saturate(1.35) brightness(.97) !important;
   box-shadow: var(--lg-ctl-shadow) !important;
 }
 
-html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-group="1"] [data-liquid-glass-video-vote-control="1"][data-liquid-glass-video-vote-kind="dislike"] {
-  box-shadow: inset 1px 0 0 var(--lg-rim-dim) !important;
+html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-group="1"] :is(
+  yt-smartimation,
+  .ytSmartImationsContent,
+  .ytSegmentedLikeDislikeButtonViewModelSegmentedButtonsWrapper,
+  like-button-view-model,
+  dislike-button-view-model,
+  .ytLikeButtonViewModelHost,
+  .ytDislikeButtonViewModelHost,
+  toggle-button-view-model,
+  button-view-model,
+  .ytSpecButtonViewModelHost,
+  yt-button-shape
+):not([data-liquid-glass-video-vote-surface="1"]) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-group="1"] :is(
+  yt-smartimation,
+  .ytSmartImationsContent,
+  .ytSegmentedLikeDislikeButtonViewModelSegmentedButtonsWrapper,
+  like-button-view-model,
+  dislike-button-view-model,
+  .ytLikeButtonViewModelHost,
+  .ytDislikeButtonViewModelHost,
+  toggle-button-view-model,
+  button-view-model,
+  .ytSpecButtonViewModelHost,
+  yt-button-shape,
+  button
+)::before,
+html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-group="1"] :is(
+  yt-smartimation,
+  .ytSmartImationsContent,
+  .ytSegmentedLikeDislikeButtonViewModelSegmentedButtonsWrapper,
+  like-button-view-model,
+  dislike-button-view-model,
+  .ytLikeButtonViewModelHost,
+  .ytDislikeButtonViewModelHost,
+  toggle-button-view-model,
+  button-view-model,
+  .ytSpecButtonViewModelHost,
+  yt-button-shape,
+  button
+)::after {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-control="1"] {
-  min-height: 36px !important;
-  border: 1px solid rgb(255 255 255 / .14) !important;
-  border-radius: 999px !important;
-  background: linear-gradient(145deg, rgb(255 255 255 / .12), rgb(255 255 255 / .018) 62%), var(--lg-ctl-fill) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(1.35) brightness(.97) !important;
-  backdrop-filter: blur(14px) saturate(1.35) brightness(.97) !important;
-  box-shadow: var(--lg-ctl-shadow) !important;
-}
-
-html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-group="1"] [data-liquid-glass-video-vote-control="1"] {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   height: 36px !important;
+  min-height: 36px !important;
   min-width: 42px !important;
   margin: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
   box-shadow: none !important;
-  color: var(--yt-spec-text-primary, #fff) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  filter: none !important;
+  color: rgb(248 248 250) !important;
+  -webkit-text-fill-color: currentColor !important;
+  transition:
+    background-color var(--lg-t-fast) var(--lg-ease),
+    transform var(--lg-t-fast) var(--lg-spring) !important;
+}
+
+html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-control="1"] :is(
+  .ytSpecButtonShapeNextElevatedContent,
+  .ytSpecButtonShapeNextIcon,
+  .ytSpecButtonShapeNextButtonTextContent,
+  .yt-spec-button-shape-next__icon,
+  .yt-spec-button-shape-next__button-text-content
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-control="1"][data-liquid-glass-video-vote-kind="dislike"] {
+  box-shadow: inset 1px 0 0 var(--lg-rim-dim) !important;
+}
+
+html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-control="1"][aria-pressed="true"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-control="1"][data-liquid-glass-video-vote-kind="dislike"][aria-pressed="true"] {
+  box-shadow: inset 1px 0 0 var(--lg-rim-dim) !important;
 }
 
 html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-control="1"]:hover {
-  background: var(--lg-ctl-hover) !important;
+  background: color-mix(in srgb, var(--lg-ctl-hover) 44%, transparent) !important;
+}
+
+html[data-liquid-glass-active="true"][data-liquid-glass-bounce="true"] [data-liquid-glass-video-vote-control="1"]:active {
+  transform: scale(.965) !important;
+}
+
+html[data-liquid-glass-active="true"] [data-liquid-glass-video-vote-group="1"] :is(
+  yt-touch-feedback-shape,
+  .ytSpecTouchFeedbackShapeHost,
+  .ytSpecTouchFeedbackShapeStroke,
+  .ytSpecTouchFeedbackShapeFill,
+  .yt-spec-touch-feedback-shape,
+  .yt-spec-touch-feedback-shape__fill,
+  .yt-spec-touch-feedback-shape__stroke
+) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 html[data-liquid-glass-active="true"] :is(
@@ -4673,12 +4920,34 @@ html[data-liquid-glass-active="true"] :is(
   backdrop-filter: blur(16px) saturate(1.35) brightness(.97) !important;
 }
 
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"]:not([data-liquid-glass-adaptive-category="1"]),
+html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"] [data-liquid-glass-chip-surface="1"]:not([data-liquid-glass-adaptive-category="1"]) :where(*),
 html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"][data-liquid-glass-adaptive-chip-text="false"] [data-liquid-glass-chip-surface="1"],
 html[data-liquid-glass-active="true"][data-liquid-glass-clean="true"][data-liquid-glass-adaptive-chip-text="false"] [data-liquid-glass-chip-surface="1"] :where(*) {
   color: rgb(250 250 252) !important;
   -webkit-text-fill-color: rgb(250 250 252) !important;
   --yt-spec-text-primary: rgb(250 250 252) !important;
   --yt-spec-text-secondary: rgb(245 245 248 / .84) !important;
+}
+
+html[data-liquid-glass-active="true"][data-liquid-glass-watch-page="true"]:not([data-liquid-glass-guide-exit="true"]) ytd-app :is(
+  tp-yt-app-drawer#guide,
+  #guide.ytd-app,
+  ytd-guide-renderer,
+  ytd-mini-guide-renderer
+) {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html[data-liquid-glass-clean="true"][data-liquid-glass-watch-page="true"] ytd-app {
+  --lg-guide-reserved-lane: 0px !important;
+  --lg-main-chrome-width: min(calc(100vw - (2 * var(--lg-chrome-side-gap))), var(--lg-chrome-max-width)) !important;
+}
+
+html[data-liquid-glass-clean="true"][data-liquid-glass-watch-page="true"] ytd-app #page-manager {
+  margin-left: 0 !important;
 }
 
 @media (max-width: 1600px) {
@@ -4860,20 +5129,185 @@ html[data-liquid-glass-clean="true"] ytd-app:not([guide-persistent-and-visible])
   --lg-guide-reserved-lane: var(--app-drawer-width, 240px);
 }
 
-html[data-liquid-glass-clean="true"] ytd-app[guide-persistent-and-visible] {
+html[data-liquid-glass-clean="true"] ytd-app {
   --lg-main-chrome-width: min(calc(100vw - var(--lg-guide-reserved-lane) - (2 * var(--lg-chrome-side-gap))), var(--lg-chrome-max-width));
 }
 
-html[data-liquid-glass-clean="true"] ytd-app[guide-persistent-and-visible] ytd-masthead #container.ytd-masthead {
+html[data-liquid-glass-clean="true"]:not([data-liquid-glass-player-fullscreen="true"]) ytd-app ytd-masthead #container.ytd-masthead {
   width: var(--lg-main-chrome-width) !important;
   max-width: var(--lg-main-chrome-width) !important;
   margin-left: calc(var(--lg-guide-reserved-lane) + ((100vw - var(--lg-guide-reserved-lane) - var(--lg-main-chrome-width)) / 2)) !important;
   margin-right: 0 !important;
 }
 
-html[data-liquid-glass-clean="true"] ytd-app[guide-persistent-and-visible] ytd-feed-filter-chip-bar-renderer #scroll-container {
+html[data-liquid-glass-clean="true"]:not([data-liquid-glass-player-fullscreen="true"]) ytd-app ytd-feed-filter-chip-bar-renderer #scroll-container {
   width: var(--lg-main-chrome-width) !important;
   max-width: var(--lg-main-chrome-width) !important;
   margin-left: calc(var(--lg-guide-reserved-lane) + ((100vw - var(--lg-guide-reserved-lane) - var(--lg-main-chrome-width)) / 2)) !important;
   margin-right: 0 !important;
+}
+
+html[data-liquid-glass-active="true"] ytd-guide-renderer[data-liquid-glass-guide-source-exiting="1"] {
+  opacity: 0 !important;
+}
+
+html[data-liquid-glass-active="true"] [data-liquid-glass-guide-ghost="1"] {
+  position: fixed !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 8px !important;
+  border: 0 !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(260px circle at var(--lg-mx) var(--lg-my), rgb(255 255 255 / calc(.18 * var(--lg-spec))), transparent 62%),
+    linear-gradient(155deg, rgb(255 255 255 / .16), rgb(255 255 255 / 0) 42%, rgb(255 255 255 / .07)),
+    var(--lg-bar-fill) !important;
+  -webkit-backdrop-filter: var(--lg-refr-lg) blur(16px) saturate(var(--lg-sat)) brightness(var(--lg-bright)) !important;
+  backdrop-filter: var(--lg-refr-lg) blur(16px) saturate(var(--lg-sat)) brightness(var(--lg-bright)) !important;
+  box-shadow: var(--lg-panel-shadow) !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  scrollbar-width: none !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  z-index: 2147483000 !important;
+  color: rgb(248 248 250) !important;
+  -webkit-text-fill-color: currentColor !important;
+  transform-origin: 18% 50% !important;
+  animation: lg-guide-ghost-exit 480ms linear both !important;
+  will-change: transform, opacity !important;
+  contain: layout paint style !important;
+}
+
+html[data-liquid-glass-active="true"] [data-liquid-glass-guide-ghost="1"]::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-ghost="1"] :is(
+  #guide-content,
+  #guide-inner-content,
+  #sections,
+  #contents,
+  ytd-guide-section-renderer,
+  #items,
+  ytd-guide-entry-renderer,
+  ytd-guide-collapsible-entry-renderer,
+  #expander-item,
+  #collapser-item
+) {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+  background: transparent !important;
+}
+
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-ghost="1"] :is(ytd-guide-entry-renderer, ytd-guide-collapsible-entry-renderer) {
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-ghost="1"] :is(a#endpoint, #endpoint, [data-liquid-glass-guide-expander-control="1"]) {
+  box-sizing: border-box !important;
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  color: rgb(248 248 250) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-ghost="1"] :is(a#endpoint, #endpoint) > :is(tp-yt-paper-item, yt-list-item-view-model) {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  border-radius: inherit !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-ghost="1"] :is(a#endpoint, #endpoint):not(:has(> tp-yt-paper-item)):not(:has(> yt-list-item-view-model)) {
+  gap: 12px !important;
+  padding-inline: 14px !important;
+}
+
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-ghost="1"] :is(a#endpoint, #endpoint) :is(.guide-icon, yt-icon.guide-icon, yt-icon-shape, yt-img-shadow) {
+  box-sizing: border-box !important;
+  flex: 0 0 24px !important;
+  width: 24px !important;
+  min-width: 24px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-ghost="1"] [data-liquid-glass-guide-expander-control="1"] :is(.guide-icon, yt-icon, yt-icon-shape) svg {
+  width: 24px !important;
+  height: 24px !important;
+  transform: scale(1.35) !important;
+  transform-origin: 50% 50% !important;
+}
+
+html[data-liquid-glass-clean="true"] [data-liquid-glass-guide-ghost="1"] :is(
+  yt-formatted-string.title,
+  #label,
+  .title,
+  .yt-core-attributed-string,
+  [class*="Title"],
+  [class*="title"]
+) {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  white-space: normal !important;
+  text-overflow: clip !important;
+  text-align: left !important;
+  line-height: 1.18 !important;
+  overflow-wrap: anywhere !important;
+  color: rgb(248 248 250) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+@keyframes lg-guide-ghost-exit {
+  0% { opacity: 1; transform: translate3d(0, 0, 0) scaleX(1) scaleY(1); }
+  13% { opacity: 1; transform: translate3d(5px, 0, 0) scaleX(1.016) scaleY(.995); }
+  28% { opacity: 1; transform: translate3d(-3px, 0, 0) scaleX(.995) scaleY(1.004); }
+  48% { opacity: .98; transform: translate3d(-24px, 0, 0) scaleX(.982) scaleY(.998); }
+  68% { opacity: .82; transform: translate3d(-72px, 0, 0) scaleX(.962) scaleY(.992); }
+  84% { opacity: .43; transform: translate3d(-142px, 0, 0) scaleX(.934) scaleY(.982); }
+  100% { opacity: 0; transform: translate3d(calc(-100% - 36px), 0, 0) scaleX(.90) scaleY(.968); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-liquid-glass-active="true"] [data-liquid-glass-guide-ghost="1"] {
+    animation-duration: 1ms !important;
+  }
 }

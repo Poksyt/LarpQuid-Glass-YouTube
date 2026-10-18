@@ -182,6 +182,62 @@
         target.appendChild(style);
     }
     installLightSearchStyle();
+    const CLICK_FEEDBACK_CSS = `
+    :host-context(html[data-liquid-glass-clean="true"]) :is(
+      yt-interaction,
+      tp-yt-paper-ripple,
+      paper-ripple,
+      .paper-ripple,
+      .yt-spec-touch-feedback-shape,
+      .yt-spec-touch-feedback-shape__fill,
+      .yt-spec-touch-feedback-shape__stroke,
+      .yt-spec-touch-feedback-shape__highlight
+    ) {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      background: transparent !important;
+      background-color: transparent !important;
+      background-image: none !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      filter: none !important;
+      pointer-events: none !important;
+    }
+    :host-context(html[data-liquid-glass-clean="true"]) :is(
+      yt-interaction,
+      tp-yt-paper-ripple,
+      paper-ripple,
+      .paper-ripple,
+      .yt-spec-touch-feedback-shape,
+      .yt-spec-touch-feedback-shape__fill,
+      .yt-spec-touch-feedback-shape__stroke,
+      .yt-spec-touch-feedback-shape__highlight
+    )::before,
+    :host-context(html[data-liquid-glass-clean="true"]) :is(
+      yt-interaction,
+      tp-yt-paper-ripple,
+      paper-ripple,
+      .paper-ripple,
+      .yt-spec-touch-feedback-shape,
+      .yt-spec-touch-feedback-shape__fill,
+      .yt-spec-touch-feedback-shape__stroke,
+      .yt-spec-touch-feedback-shape__highlight
+    )::after {
+      content: none !important;
+      display: none !important;
+      background: transparent !important;
+      background-image: none !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+    :host-context(html[data-liquid-glass-clean="true"]) :is(button,[role="button"],[role="tab"],a[href],yt-icon-button,tp-yt-paper-button) {
+      -webkit-tap-highlight-color: transparent !important;
+    }
+    :host-context(html[data-liquid-glass-clean="true"]) :is(button,[role="button"],[role="tab"],a[href],yt-icon-button,tp-yt-paper-button):is(:focus,:focus-visible) {
+      outline: none !important;
+      outline-offset: 0 !important;
+    }
+  `;
     const CHIP_CSS = `
     :host {
       background: transparent !important;
@@ -344,11 +400,13 @@
         Element.prototype.attachShadow = function (init) {
             const root = originalAttachShadow.call(this, init);
             const host = this;
+            appendStyle(root, 'click-feedback', CLICK_FEEDBACK_CSS);
             const tag = (host.localName || '').toLowerCase();
             if (!PATCHED_HOSTS.has(tag))
                 return root;
             const repatch = () => {
                 try {
+                    appendStyle(root, 'click-feedback', CLICK_FEEDBACK_CSS);
                     patchRoot(root, host);
                 }
                 catch (_error) { }
